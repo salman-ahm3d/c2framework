@@ -4,7 +4,7 @@ import json
 from flask import request, Response
 from flask_restful import Resource
 from database.db import initialize_db
-from database.models import Task, Result
+from database.models import Task, Result, TaskHistory
 
 class Tasks(Resource):
     # ListTasks
@@ -37,6 +37,15 @@ class Tasks(Resource):
                 # Anything that comes after task_type and task_id is treated as an option
                 if (key != "task_type" and key != "task_id"):
                     task_options.append(key + ": " + json_obj[i][key])
+            
+            # Add to task history
+            TaskHistory(
+            task_id=json_obj[i]['task_id'],
+            task_type=json_obj[i]['task_type'],
+            task_object=json.dumps(json_obj),
+            task_options=task_options,
+            task_results=""
+            ).save()
         
         # Return the last Task objects that were added
         return Response(Task.objects.skip(Task.objects.count() - obj_num).to_json(),
@@ -72,4 +81,34 @@ class Results(Resource):
             # Clear tasks so they don't execute twice
             Task.objects().delete()
             return Response(tasks, mimetype="application/json", status=200)
-        
+
+class History(Resource):
+    # ListHistory
+    def get(self):
+        # Get all the task history objects so we can return them to user
+        task_history = TaskHistory.objects().to_json()
+        # Update any served tasks with results from implant
+        # Get all the result objects and return them to the user
+        results = Result.objects().to_json()
+        json_obj = json.loads(results)
+        # Format each result from the implant to be more user/API friendly
+        result_obj_collection = []
+        for i in range(len(json_obj)):
+            for field in json_obj[i]:
+                result_obj = {
+                    "task_id": field,
+                    "task_results": json_obj[i][field]
+                }
+                result_obj_collection.append(result_obj)
+        # For each result in the collection, check for a corresponding task ID
+        # and if there's a match, update it with results
+        # There is probably a better solution to update tasks
+        # As their results come in
+
+        for result in result_obj_collection:
+            if TaskHistory.objects(task_id=result["task_id"]):
+                TaskHistory.objects(task_id=result["task_id"]).update_one(
+                    set__task_results=result["task_results"]
+                )
+        return Response(task_history, mimetype="application/json", status=200)
+    

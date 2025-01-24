@@ -8,3 +8,7 @@ class Task(db.DynamicDocument):
 # Define Result object in database
 class Result(db.DynamicDocument):
     result_id = db.StringField(required=True)
+
+# Define TaskHistory object in database
+class TaskHistory(db.DynamicDocument):
+    task_object = db.StringField()
