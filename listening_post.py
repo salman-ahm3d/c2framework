@@ -19,8 +19,9 @@ initialize_db(app)
 # Initialize our API
 api = Api(app)
 
-# Define routes for each of our resources
+# Define the routes for each of our resources
 api.add_resource(resources.Tasks, '/tasks', endpoint='tasks')
+api.add_resource(resources.Results, '/results')
 
 # Start the Flask app in debug mode
 if __name__ == '__main__':
