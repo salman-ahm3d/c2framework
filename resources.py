@@ -59,7 +59,7 @@ class Results(Resource):
             print("Received implant response: {}".format(body))
             json_obj = json.loads(json.dumps(body))
             # Add a result UUID to each result object for tracking
-            json_obj['result_id'] = str(uuid.uiid4())
+            json_obj['result_id'] = str(uuid.uuid4())
             Result(**json_obj).save()
             # Serve latest tasks to implant
             tasks = Task.objects().to_json()
