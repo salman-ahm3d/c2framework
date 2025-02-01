@@ -14,7 +14,7 @@ def api_get_request(endpoint):
     return response_json
 
 # CLI commands and logic
-@click.group
+@click.group()
 def cli():
     pass
 
